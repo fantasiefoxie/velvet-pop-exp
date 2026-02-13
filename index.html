@@ -34,9 +34,8 @@ button{border:none;border-radius:30px;padding:14px 28px}
 #no{background:transparent;color:#ffb3c6;border:1px solid rgba(255,255,255,.25);left:160px}
 #tease{margin-top:12px;color:#ffb3c6;height:24px}
 
-#celebrate{position:absolute;inset:0;display:none;z-index:10}
+#celebrate{position:absolute;inset:0;display:none}
 
-/* LEFT aligned intro message */
 #message{
  position:absolute;
  top:24px;
@@ -76,7 +75,7 @@ button{border:none;border-radius:30px;padding:14px 28px}
  padding:4px 6px;
 }
 
-/* Romantic whisper — cosmetic only */
+/* Romantic whisper cosmetic */
 #whisper{
  position:absolute;
  top:58px;
@@ -90,7 +89,7 @@ button{border:none;border-radius:30px;padding:14px 28px}
  opacity:0;
  transition:opacity .35s ease;
  pointer-events:none;
- z-index:5;
+ z-index:15;
 }
 
 #combo{position:absolute;bottom:18px;right:18px;font-size:13px}
@@ -191,6 +190,7 @@ button{border:none;border-radius:30px;padding:14px 28px}
 </div>
 
 <div id="cardReveal"></div>
+
 <div id="deckPanel">
 <div id="deckBack">← Back to Game</div>
 <h2>Your Love Deck</h2>
@@ -203,6 +203,8 @@ button{border:none;border-radius:30px;padding:14px 28px}
 <audio id="popSound" src="pop.mp3"></audio>
 
 <script>
+/* === YOUR ORIGINAL FULL LOGIC — RESTORED === */
+
 const heart=document.getElementById("heart"),intro=document.getElementById("intro"),
 question=document.getElementById("question"),celebrate=document.getElementById("celebrate"),
 play=document.getElementById("playArea"),comboEl=document.getElementById("combo"),
@@ -214,11 +216,13 @@ bg=document.getElementById("bg"),blue=document.getElementById("blue"),
 maw=document.getElementById("maw"),popSound=document.getElementById("popSound");
 
 const whisperEl=document.getElementById("whisper");
-
 const trackSelect=document.getElementById("trackSelect");
+
 trackSelect.onchange=()=>{
- blue.pause(); blue.src=trackSelect.value;
- blue.load(); blue.play().catch(()=>{});
+ blue.pause();
+ blue.src=trackSelect.value;
+ blue.load();
+ blue.play().catch(()=>{});
 };
 
 heart.onclick=()=>{bg.play().catch(()=>{});intro.style.display="none";question.style.display="flex";};
@@ -226,7 +230,6 @@ heart.onclick=()=>{bg.play().catch(()=>{});intro.style.display="none";question.s
 const no=document.getElementById("no"),yes=document.getElementById("yes"),tease=document.getElementById("tease");
 const lines=["Almost 😏","Nope 😌","Try harder 💕","Persistent 😳"];
 let ti=0,ys=1;
-
 function moveNo(){
  no.style.left=Math.random()*180+"px";
  no.style.top=Math.random()*60+"px";
@@ -246,7 +249,6 @@ const romanticLines=[
  "I swear the game likes you",
  "That combo looked magical 💫"
 ];
-
 function romanticWhisper(combo){
  if(combo>0 && combo%7===0){
    whisperEl.textContent=romanticLines[Math.floor(Math.random()*romanticLines.length)];
@@ -255,13 +257,15 @@ function romanticWhisper(combo){
  }
 }
 
-/* FLOATS */
+/* FLOATS + CARDS + SCORE (FULL ORIGINAL) */
 const FOOD=["🍫","🧇","🍝","🍕"],FLOWERS=["🌹","🌻","💋"],
 NICK=["Gumball 💕","Cutiepie 💖","floof ☁️"],ANIMALS=["😺","🦊","🐢","🐱","🧸"];
 const ALL=[...FOOD,...FLOWERS,...NICK,...ANIMALS];
 const cat=x=>FOOD.includes(x)?"food":FLOWERS.includes(x)?"flower":NICK.includes(x)?"nick":"animal";
 
-/* GAME (UNCHANGED CORE) */
+let deck=JSON.parse(localStorage.getItem("deckData")||"[]");
+let highScore=Number(localStorage.getItem("highScore")||0);
+
 let floats=[],paused=true,combo=0,itemChain=0,typeChain=0,lastItem=null,lastType=null;
 
 function rv(a){
@@ -289,13 +293,15 @@ function popFloat(o){
  typeChain=(c===lastType)?typeChain+1:1;
  lastItem=o.type; lastType=c;
  combo++;
- showPop(o.x,o.y); remove(o);
+ if(combo>highScore){highScore=combo;localStorage.setItem("highScore",highScore);}
  romanticWhisper(combo);
+ showPop(o.x,o.y); remove(o);
  refill(); updateGlow(); updateStats();
 }
 
 function remove(o){o.el.remove();floats=floats.filter(f=>f!==o);}
 function refill(){while(floats.length<27) spawn();}
+
 function showPop(x,y){
  const d=document.createElement("div");
  d.className="candy"; d.textContent="POP!";
@@ -325,7 +331,8 @@ function animate(){
 animate();
 
 function updateStats(){
- comboEl.textContent=`Combo ${combo}`;
+ comboEl.textContent=`Combo ${combo} | Item ${itemChain} | Type ${typeChain}`;
+ statsEl.textContent=`Highest Score ${highScore}`;
 }
 
 yes.onclick=()=>{
@@ -335,6 +342,7 @@ yes.onclick=()=>{
  blue.play().catch(()=>{});
  for(let i=0;i<27;i++) spawn();
  paused=false;
+ updateStats();
  setTimeout(()=>{messageEl.style.opacity=0;statsEl.style.opacity=1;},3000);
 };
 </script>
