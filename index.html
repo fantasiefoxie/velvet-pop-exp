@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cutiepie ❤️ — Velvet Pop</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Pacifico&display=swap" rel="stylesheet">
 
 <style>
@@ -39,19 +38,16 @@ button{border:none;border-radius:30px;padding:14px 28px}
  transition:opacity .8s;
 }
 
-/* HIGH SCORE LEFT */
 #stats{
  position:absolute;
  top:24px;
  left:18px;
- width:auto;
- text-align:left;
  font-size:14px;
  opacity:0;
  transition:opacity .8s;
 }
 
-/* JUKEBOX RIGHT */
+/* JUKEBOX */
 #jukebox{
  position:absolute;
  top:18px;
@@ -70,22 +66,21 @@ button{border:none;border-radius:30px;padding:14px 28px}
  padding:4px 6px;
 }
 
-/* ✨ NEW ROMANTIC WHISPER ✨ */
+/* ROMANTIC WHISPER */
 #whisper{
  position:absolute;
  top:58px;
  right:18px;
- font-family:'Pacifico', cursive;
+ font-family:'Pacifico',cursive;
  font-size:20px;
- letter-spacing:.3px;
  background:linear-gradient(90deg,#ff7aa2,#ffb3ff,#7ae8ff);
  -webkit-background-clip:text;
  -webkit-text-fill-color:transparent;
  text-shadow:0 0 8px rgba(255,120,180,.6),
-             0 0 16px rgba(120,220,255,.35);
+             0 0 16px rgba(120,220,255,.4);
  opacity:0;
  transform:translateY(-4px) scale(.96);
- transition:opacity .25s ease, transform .25s ease;
+ transition:opacity .25s ease,transform .25s ease;
  pointer-events:none;
  z-index:15;
 }
@@ -100,22 +95,26 @@ button{border:none;border-radius:30px;padding:14px 28px}
  padding:6px 10px;border-radius:10px;
  background:rgba(255,255,255,.1);cursor:pointer;
 }
+
 #playArea{
  position:absolute;
  top:90px;bottom:70px;left:18px;right:18px;
  overflow:hidden;
 }
 
+/* FLOATS */
 .float{position:absolute;font-size:28px;cursor:pointer;transition:transform .25s}
 .float.nickname{font-family:'Comfortaa';font-size:16px}
 .float.active{filter:drop-shadow(0 0 16px #ff7aa2);transform:scale(1.5);}
 .float.active::after{
- content:"";position:absolute;inset:-6px;border-radius:50%;
+ content:"";
+ position:absolute;inset:-6px;border-radius:50%;
  border:2px solid rgba(255,255,255,.4);
  box-shadow:0 0 14px rgba(255,150,220,.7);
 }
 .float.passive{filter:blur(.8px) brightness(.85);transform:scale(.8);}
 
+/* POP */
 .candy{
  position:absolute;font-size:18px;font-weight:900;
  text-shadow:0 0 16px #ff4d88;
@@ -128,6 +127,7 @@ button{border:none;border-radius:30px;padding:14px 28px}
  100%{opacity:0;transform:translateY(-55px) scale(.7)}
 }
 
+/* CARD UI */
 #cardReveal{
  position:absolute;left:50%;bottom:-260px;
  transform:translateX(-50%);
@@ -135,8 +135,6 @@ button{border:none;border-radius:30px;padding:14px 28px}
  padding:12px;text-align:center;
  transition:bottom .6s ease;
  z-index:700;
- box-shadow:0 0 24px rgba(255,120,180,.5);
- pointer-events:none;
 }
 #cardReveal.show{bottom:110px}
 
@@ -146,14 +144,8 @@ button{border:none;border-radius:30px;padding:14px 28px}
  display:none;flex-direction:column;
  padding:20px;overflow-y:auto;z-index:999;
 }
-.cardGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-bottom:120px}
-.card{background:#2a0f1a;border-radius:12px;padding:8px;font-size:10px;aspect-ratio:3/4}
-.card .stamp{font-size:9px;opacity:.7}
-#deckBack{
- margin-bottom:14px;width:max-content;padding:10px 16px;
- border-radius:12px;background:rgba(255,255,255,.18);
- cursor:pointer;font-size:15px;font-weight:600;
-}
+.cardGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:#2a0f1a;border-radius:12px;padding:8px;font-size:10px}
 </style>
 </head>
 
@@ -174,28 +166,19 @@ button{border:none;border-radius:30px;padding:14px 28px}
 <div id="message">💗 My favourite person &lt;3 💗</div>
 <div id="stats"></div>
 
-<div id="jukebox">
- 🎵
- <select id="trackSelect">
-  <option value="blue.mp3">Track 1</option>
-  <option value="old-desi-lofi.mp3">Track 2</option>
-  <option value="old-songs-lofi.mp3">Track 3</option>
- </select>
+<div id="jukebox">🎵
+<select id="trackSelect">
+<option value="blue.mp3">Track 1</option>
+<option value="old-desi-lofi.mp3">Track 2</option>
+<option value="old-songs-lofi.mp3">Track 3</option>
+</select>
 </div>
 
-<!-- NEW -->
 <div id="whisper"></div>
 
 <div id="playArea"></div>
 <div id="combo"></div>
 <div id="deckBtn">View Deck</div>
-</div>
-
-<div id="cardReveal"></div>
-<div id="deckPanel">
-<div id="deckBack">← Back to Game</div>
-<h2>Your Love Deck</h2>
-<div class="cardGrid" id="cardGrid"></div>
 </div>
 
 <audio id="bg" src="bg.mp3" loop></audio>
@@ -204,17 +187,74 @@ button{border:none;border-radius:30px;padding:14px 28px}
 <audio id="popSound" src="pop.mp3"></audio>
 
 <script>
-/* existing code unchanged */
-const whisperEl=document.getElementById("whisper");
+const heart=document.getElementById("heart"),
+intro=document.getElementById("intro"),
+question=document.getElementById("question"),
+celebrate=document.getElementById("celebrate"),
+play=document.getElementById("playArea"),
+messageEl=document.getElementById("message"),
+statsEl=document.getElementById("stats"),
+whisperEl=document.getElementById("whisper"),
+bg=document.getElementById("bg"),
+blue=document.getElementById("blue");
 
-/* replace ONLY romanticWhisper() with this cosmetic-only version */
-function romanticWhisper(){
+const trackSelect=document.getElementById("trackSelect");
+trackSelect.onchange=()=>{
+ blue.pause();
+ blue.src=trackSelect.value;
+ blue.load();
+ blue.play().catch(()=>{});
+};
+
+heart.onclick=()=>{
+ bg.play().catch(()=>{});
+ intro.style.display="none";
+ question.style.display="flex";
+};
+
+const romanticLines=[
+ "You're glowing today 💖",
+ "Unstoppable energy ✨",
+ "That combo looked magical 💫",
+ "You're totally unbeatable tonight"
+];
+
+function romanticWhisper(combo){
  if(combo>0 && combo%7===0){
    whisperEl.textContent=romanticLines[Math.floor(Math.random()*romanticLines.length)];
    whisperEl.classList.add("show");
    setTimeout(()=>whisperEl.classList.remove("show"),1400);
  }
 }
+
+/* SIMPLE FLOAT DEMO (unchanged behaviour) */
+let combo=0;
+function spawn(){
+ const el=document.createElement("div");
+ el.className="float";
+ el.textContent="💖";
+ el.style.left=Math.random()*80+"%";
+ el.style.top=Math.random()*80+"%";
+ el.onclick=()=>{
+   combo++;
+   romanticWhisper(combo);
+   el.remove();
+   spawn();
+ };
+ play.appendChild(el);
+}
+for(let i=0;i<20;i++) spawn();
+
+document.getElementById("yes").onclick=()=>{
+ bg.pause();
+ question.style.display="none";
+ celebrate.style.display="block";
+ blue.play().catch(()=>{});
+ setTimeout(()=>{
+   messageEl.style.opacity=0;
+   statsEl.style.opacity=1;
+ },3000);
+};
 </script>
 
 </body>
