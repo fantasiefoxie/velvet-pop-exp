@@ -43,8 +43,7 @@ button{border:none;border-radius:30px;padding:14px 28px}
 /* JUKEBOX */
 #jukebox{
  position:absolute;
- top:56px;
- right:18px;
+ top:56px; right:18px;
  background:rgba(0,0,0,.35);
  padding:6px 10px;
  border-radius:10px;
@@ -69,14 +68,8 @@ button{border:none;border-radius:30px;padding:14px 28px}
 .float{position:absolute;font-size:28px;cursor:pointer;transition:transform .25s}
 .float.nickname{font-family:'Comfortaa';font-size:16px}
 .float.active{filter:drop-shadow(0 0 16px #ff7aa2);transform:scale(1.5);}
-.float.active::after{
- content:"";position:absolute;inset:-6px;border-radius:50%;
- border:2px solid rgba(255,255,255,.4);
- box-shadow:0 0 14px rgba(255,150,220,.7);
-}
 .float.passive{filter:blur(.8px) brightness(.85);transform:scale(.8);}
 
-/* POP */
 .candy{
  position:absolute;font-size:18px;font-weight:900;
  text-shadow:0 0 16px #ff4d88;
@@ -112,11 +105,7 @@ button{border:none;border-radius:30px;padding:14px 28px}
 .cardGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-bottom:120px}
 .card{background:#2a0f1a;border-radius:12px;padding:8px;font-size:10px;aspect-ratio:3/4}
 .card .stamp{font-size:9px;opacity:.7}
-#deckBack{
- margin-bottom:14px;width:max-content;padding:10px 16px;
- border-radius:12px;background:rgba(255,255,255,.18);
- cursor:pointer;font-size:15px;font-weight:600;
-}
+#deckBack{margin-bottom:14px;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,.18);cursor:pointer}
 </style>
 </head>
 
@@ -137,7 +126,6 @@ button{border:none;border-radius:30px;padding:14px 28px}
 <div id="message">💗 My favourite person &lt;3 💗</div>
 <div id="stats"></div>
 
-<!-- JUKEBOX -->
 <div id="jukebox">
  🎵 Music:
  <select id="trackSelect">
@@ -166,18 +154,24 @@ button{border:none;border-radius:30px;padding:14px 28px}
 <audio id="popSound" src="pop.mp3"></audio>
 
 <script>
-/* ORIGINAL VARIABLES */
-const heart=document.getElementById("heart"),intro=document.getElementById("intro"),
-question=document.getElementById("question"),celebrate=document.getElementById("celebrate"),
-play=document.getElementById("playArea"),comboEl=document.getElementById("combo"),
-statsEl=document.getElementById("stats"),messageEl=document.getElementById("message"),
-deckBtn=document.getElementById("deckBtn"),deckPanel=document.getElementById("deckPanel"),
-deckBack=document.getElementById("deckBack"),cardGrid=document.getElementById("cardGrid"),
+const heart=document.getElementById("heart"),
+intro=document.getElementById("intro"),
+question=document.getElementById("question"),
+celebrate=document.getElementById("celebrate"),
+play=document.getElementById("playArea"),
+comboEl=document.getElementById("combo"),
+statsEl=document.getElementById("stats"),
+messageEl=document.getElementById("message"),
+deckBtn=document.getElementById("deckBtn"),
+deckPanel=document.getElementById("deckPanel"),
+deckBack=document.getElementById("deckBack"),
+cardGrid=document.getElementById("cardGrid"),
 cardReveal=document.getElementById("cardReveal"),
-bg=document.getElementById("bg"),blue=document.getElementById("blue"),
-maw=document.getElementById("maw"),popSound=document.getElementById("popSound");
+bg=document.getElementById("bg"),
+blue=document.getElementById("blue"),
+maw=document.getElementById("maw"),
+popSound=document.getElementById("popSound");
 
-/* JUKEBOX */
 const trackSelect=document.getElementById("trackSelect");
 let currentMusic=blue;
 
@@ -188,13 +182,62 @@ trackSelect.onchange=()=>{
  currentMusic.play().catch(()=>{});
 };
 
-/* === YOUR ENTIRE GAME CODE BELOW STAYS SAME === */
-/* (I only changed YES button music line) */
+heart.onclick=()=>{bg.play();intro.style.display="none";question.style.display="flex";};
 
-heart.onclick=()=>{bg.play().catch(()=>{});intro.style.display="none";question.style.display="flex";};
+const no=document.getElementById("no"),yes=document.getElementById("yes"),tease=document.getElementById("tease");
+const lines=["Almost 😏","Nope 😌","Try harder 💕","Persistent 😳"];
+let ti=0,ys=1;
+function moveNo(){
+ no.style.left=Math.random()*180+"px";
+ no.style.top=Math.random()*60+"px";
+ tease.textContent=lines[ti++%lines.length];
+ ys+=.05; yes.style.transform=`scale(${ys})`;
+ maw.currentTime=0; maw.play();
+}
+no.onmouseover=moveNo; no.ontouchstart=moveNo;
 
-/* ... ALL YOUR EXISTING GAME LOGIC UNCHANGED ... */
+/* your original game logic */
+const FOOD=["🍫","🧇","🍝","🍕"],FLOWERS=["🌹","🌻","💋"],
+NICK=["Gumball 💕","Cutiepie 💖","floof ☁️"],ANIMALS=["😺","🦊","🐢","🐱","🧸"];
+const ALL=[...FOOD,...FLOWERS,...NICK,...ANIMALS];
+const cat=x=>FOOD.includes(x)?"food":FLOWERS.includes(x)?"flower":NICK.includes(x)?"nick":"animal";
 
+let floats=[],paused=true,combo=0,itemChain=0,typeChain=0,lastItem=null,lastType=null;
+function rv(a){const b=(Math.random()-.5)*1.4||.6;return a?b*0.8:b*1.3;}
+function spawn(){
+ const t=ALL[Math.floor(Math.random()*ALL.length)];
+ const el=document.createElement("div");
+ el.className="float";
+ el.textContent=t;
+ play.appendChild(el);
+ const o={el,type:t,x:Math.random()*200,y:Math.random()*300,vx:rv(),vy:rv()};
+ el.onclick=()=>!paused&&popFloat(o);
+ floats.push(o);
+}
+function popFloat(o){
+ popSound.currentTime=0; popSound.play();
+ combo++; updateStats();
+ o.el.remove(); floats=floats.filter(f=>f!==o);
+ refill();
+}
+function refill(){while(floats.length<27) spawn();}
+function animate(){
+ if(!paused){
+  floats.forEach(f=>{
+   f.x+=f.vx; f.y+=f.vy;
+   f.el.style.transform=`translate(${f.x}px,${f.y}px)`;
+  });
+ }
+ requestAnimationFrame(animate);
+}
+animate();
+
+function updateStats(){
+ comboEl.textContent=`Combo ${combo}`;
+ statsEl.textContent=`Highest Score ${combo}`;
+}
+
+/* START */
 yes.onclick=()=>{
  bg.pause();
  question.style.display="none";
