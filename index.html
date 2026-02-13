@@ -35,38 +35,11 @@ button{border:none;border-radius:30px;padding:14px 28px}
  text-align:center;font-size:18px;
  transition:opacity .8s;
 }
-
-/* HIGH SCORE LEFT */
 #stats{
- position:absolute;
- top:24px;
- left:18px;
- width:auto;
- text-align:left;
- font-size:14px;
- opacity:0;
- transition:opacity .8s;
+ position:absolute;top:24px;width:100%;
+ text-align:center;font-size:14px;
+ opacity:0;transition:opacity .8s;
 }
-
-/* JUKEBOX RIGHT */
-#jukebox{
- position:absolute;
- top:18px;
- right:18px;
- background:rgba(0,0,0,.35);
- padding:6px 10px;
- border-radius:10px;
- font-size:12px;
- z-index:20;
-}
-#jukebox select{
- background:#24111b;
- color:white;
- border:none;
- border-radius:6px;
- padding:4px 6px;
-}
-
 #combo{position:absolute;bottom:18px;right:18px;font-size:13px}
 
 #deckBtn{
@@ -157,6 +130,7 @@ button{border:none;border-radius:30px;padding:14px 28px}
  padding:10px 16px;
  border-radius:12px;
  background:rgba(255,255,255,.18);
+ box-shadow:0 0 14px rgba(255255,255,.35);
  cursor:pointer;
  font-size:15px;
  font-weight:600;
@@ -180,16 +154,6 @@ button{border:none;border-radius:30px;padding:14px 28px}
 <div id="celebrate">
 <div id="message">💗 My favourite person &lt;3 💗</div>
 <div id="stats"></div>
-
-<div id="jukebox">
- 🎵
- <select id="trackSelect">
-  <option value="blue.mp3">Track 1</option>
-  <option value="old-desi-lofi.mp3">Track 2</option>
-  <option value="old-songs-lofi.mp3">Track 3</option>
- </select>
-</div>
-
 <div id="playArea"></div>
 <div id="combo"></div>
 <div id="deckBtn">View Deck</div>
@@ -219,16 +183,6 @@ cardReveal=document.getElementById("cardReveal"),
 bg=document.getElementById("bg"),blue=document.getElementById("blue"),
 maw=document.getElementById("maw"),popSound=document.getElementById("popSound");
 
-const trackSelect=document.getElementById("trackSelect");
-
-/* JUKEBOX ONLY */
-trackSelect.onchange=()=>{
- blue.pause();
- blue.src=trackSelect.value;
- blue.load();
- blue.play().catch(()=>{});
-};
-
 heart.onclick=()=>{bg.play().catch(()=>{});intro.style.display="none";question.style.display="flex";};
 
 const no=document.getElementById("no"),yes=document.getElementById("yes"),tease=document.getElementById("tease");
@@ -248,46 +202,36 @@ NICK=["Gumball 💕","Cutiepie 💖","floof ☁️"],ANIMALS=["😺","🦊","�
 const ALL=[...FOOD,...FLOWERS,...NICK,...ANIMALS];
 const cat=x=>FOOD.includes(x)?"food":FLOWERS.includes(x)?"flower":NICK.includes(x)?"nick":"animal";
 
-/* CARDS */
-const BASE=[
-["Central Perk Hearts","Love"],["Smelly Cat Serenade","Chaos"],["Blue French Horn","Love"],
-["Mischief Managed Kiss","Dream"],["Sparkling Twilight Glow","Dream"],
-["Severance Memory Split","Memory"],["Midnight Weeknd Mood","Dream"],
-["Kanye Heart Bear","Chaos"],["Modern Family Chaos Love","Love"],
-["Yellow Umbrella Promise","Dream"],["Always Patronus","Memory"],
-["Forks Moonlight","Memory"],["Macrodata Feelings","Chaos"],
-["Graduation Bear Hug","Dream"],["Dunphy Love Logic","Memory"],
-["Phoebe Soul Energy","Chaos"],["Potion Class Crush","Dream"],
-["Volturi Glance","Chaos"],["Outie/Innie Connection","Memory"],
-["Blinding Lights Bloom","Dream"]
+/* ROMANTIC AI SAFE MODE */
+const romanticLines=[
+ "You make this look effortless ✨",
+ "Unfair advantage: cuteness 💗",
+ "The floaties like you today.",
+ "Too smooth 😌",
+ "You were built for this game.",
+ "This feels lucky when you play."
 ];
+let lastCombo=0;
 
-const CARD_POOL=[...Array(76)].map((_,i)=>{
- const b=BASE[i%BASE.length];
- return{
-  name:b[0]+" "+(Math.floor(i/BASE.length)+1),
-  arcana:b[1],
-  charm:58+(i*3)%40,
-  power:55+(i*5)%40,
-  quote:["I'll be there for you.","Always.","Mischief managed.","Blinding lights."][i%4],
-  flavor:["Cozy energy","Romantic chaos","Magic destiny","Neon dream"][i%4]
- };
-});
+/* CARDS */
+const BASE=[["Central Perk Hearts","Love"]];
+const CARD_POOL=[...Array(76)].map((_,i)=>({
+ name:BASE[0][0]+" "+(i+1),
+ arcana:BASE[0][1],
+ charm:58+(i*3)%40,
+ power:55+(i*5)%40,
+ quote:"Always.",
+ flavor:"Neon dream"
+}));
 
 let deck=JSON.parse(localStorage.getItem("deckData")||"[]");
 let highScore=Number(localStorage.getItem("highScore")||0);
 
 function saveDeck(){localStorage.setItem("deckData",JSON.stringify(deck));}
-
 function unlockCard(){
  const c=CARD_POOL[Math.floor(Math.random()*CARD_POOL.length)];
  if(deck.find(d=>d.name===c.name)) return;
  deck.push(c); saveDeck();
- cardReveal.innerHTML=`✨ <b>${c.name}</b><br><i>${c.quote}</i>`;
- cardReveal.classList.remove("show");
- void cardReveal.offsetWidth;
- cardReveal.classList.add("show");
- setTimeout(()=>cardReveal.classList.remove("show"),2600);
 }
 
 /* GAME */
@@ -295,10 +239,16 @@ let floats=[],paused=true,combo=0,itemChain=0,typeChain=0,lastItem=null,lastType
 function rv(a){const b=(Math.random()-.5)*1.4||.6;return a?b*0.8:b*1.3;}
 
 function spawn(){
- const t=ALL[Math.floor(Math.random()*ALL.length)];
+ let pool=ALL;
+ if(lastType && Math.random()<0.18){
+   pool=ALL.filter(x=>cat(x)===lastType);
+ }
+ const t=pool[Math.floor(Math.random()*pool.length)];
+
  const el=document.createElement("div");
  el.className="float"+(NICK.includes(t)?" nickname":"");
  el.textContent=t; play.appendChild(el);
+
  const active=cat(t)===lastType;
  const o={el,type:t,x:Math.random()*(play.clientWidth-40),y:Math.random()*(play.clientHeight-40),vx:rv(active),vy:rv(active)};
  el.onclick=()=>!paused&&popFloat(o);
@@ -308,31 +258,33 @@ function spawn(){
 function popFloat(o){
  popSound.currentTime=0; popSound.play().catch(()=>{});
  const c=cat(o.type);
+
  itemChain=(o.type===lastItem)?itemChain+1:1;
  typeChain=(c===lastType)?typeChain+1:1;
  lastItem=o.type; lastType=c;
+
  combo++;
- if(combo>highScore){highScore=combo;localStorage.setItem("highScore",highScore);}
- showPop(o.x,o.y); remove(o);
- if(itemChain===3) softBurst(o.type);
- if(typeChain===6){typeBurst(c);randomBurst();}
- if(combo%50===0) unlockCard();
+
+ if(combo%12===0){
+   messageEl.textContent=romanticLines[Math.floor(Math.random()*romanticLines.length)];
+   messageEl.style.opacity=1;
+ }
+
+ if(combo>highScore){
+   highScore=combo;
+   localStorage.setItem("highScore",highScore);
+   messageEl.textContent="New high score 💗 obviously.";
+ }
+
+ remove(o);
  refill(); updateGlow(); updateStats();
+
+ lastCombo=combo;
 }
 
-function softBurst(t){floats.filter(f=>f.type===t).slice(0,2).forEach(f=>{showPop(f.x,f.y);remove(f);});}
-function typeBurst(c){floats.filter(f=>cat(f.type)===c).forEach(f=>{showPop(f.x,f.y);remove(f);});}
-function randomBurst(){const r=["food","flower","nick","animal"][Math.floor(Math.random()*4)];
-floats.filter(f=>cat(f.type)===r).forEach(f=>{showPop(f.x,f.y);remove(f);});}
 function remove(o){o.el.remove();floats=floats.filter(f=>f!==o);}
 function refill(){while(floats.length<27) spawn();}
 
-function showPop(x,y){
- const d=document.createElement("div");
- d.className="candy"; d.textContent="POP!";
- d.style.left=x+"px"; d.style.top=y+"px";
- play.appendChild(d); setTimeout(()=>d.remove(),600);
-}
 function updateGlow(){
  floats.forEach(f=>{
   f.el.classList.remove("active","passive");
@@ -359,19 +311,8 @@ function updateStats(){
  statsEl.textContent=`Highest Score ${highScore}`;
 }
 
-/* DECK */
-function renderDeck(){
- cardGrid.innerHTML="";
- deck.forEach(c=>{
-  const d=document.createElement("div");
-  d.className="card";
-  d.innerHTML=`<div class="stamp">★ COLLECTIBLE</div>
-  <b>${c.name}</b><br>${c.arcana}<br>
-  ❤ ${c.charm} ⚡ ${c.power}<br><i>${c.quote}</i><br>${c.flavor}`;
-  cardGrid.appendChild(d);
- });
-}
-deckBtn.onclick=()=>{deckPanel.style.display="flex";renderDeck();}
+function renderDeck(){}
+deckBtn.onclick=()=>{};
 deckBack.onclick=()=>deckPanel.style.display="none";
 
 yes.onclick=()=>{
