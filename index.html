@@ -225,7 +225,6 @@ cardReveal=document.getElementById("cardReveal"),
 bg=document.getElementById("bg"),blue=document.getElementById("blue"),
 maw=document.getElementById("maw"),popSound=document.getElementById("popSound");
 
-const trackSelect=document.getElementById("trackSelect");
 trackSelect.onchange=()=>{
  blue.pause();
  blue.src=trackSelect.value;
@@ -239,20 +238,25 @@ const no=document.getElementById("no"),yes=document.getElementById("yes"),tease=
 const lines=["Almost 😏","Nope 😌","Try harder 💕","Persistent 😳"];
 let ti=0,ys=1;
 function moveNo(){
- no.style.left=Math.random()*180+"px"; no.style.top=Math.random()*60+"px";
+ no.style.left=Math.random()*180+"px"; 
+ no.style.top=Math.random()*60+"px";
  tease.textContent=lines[ti++%lines.length];
- ys+=.05; yes.style.transform=`scale(${ys})`;
- maw.currentTime=0; maw.volume=.2; maw.play().catch(()=>{});
+ ys+=.05; 
+ yes.style.transform=`scale(${ys})`;
+ maw.currentTime=0; 
+ maw.volume=.2; 
+ maw.play().catch(()=>{});
 }
-no.onmouseover=moveNo; no.ontouchstart=moveNo;
+no.onmouseover=moveNo; 
+no.ontouchstart=moveNo;
 
-/* Romantic AI Safe Mode */
 const romanticLines=[
  "You're glowing today 💖",
  "Unstoppable energy ✨",
  "I swear the game likes you",
  "That combo looked magical 💫"
 ];
+
 function romanticWhisper(){
  if(combo>0 && combo%7===0){
    whisperEl.textContent=romanticLines[Math.floor(Math.random()*romanticLines.length)];
@@ -261,109 +265,101 @@ function romanticWhisper(){
  }
 }
 
-/* ==== GAME ==== */
-const FOOD=["🍫","🧇","🍝","🍕"],FLOWERS=["🌹","🌻","💋"],
-NICK=["Gumball 💕","Cutiepie 💖","floof ☁️"],ANIMALS=["😺","🦊","🐢","🐱","🧸"];
+const FOOD=["🍫","🧇","🍝","🍕"],
+FLOWERS=["🌹","🌻","💋"],
+NICK=["Gumball 💕","Cutiepie 💖","floof ☁️"],
+ANIMALS=["😺","🦊","🐢","🐱","🧸"];
+
 const ALL=[...FOOD,...FLOWERS,...NICK,...ANIMALS];
 const cat=x=>FOOD.includes(x)?"food":FLOWERS.includes(x)?"flower":NICK.includes(x)?"nick":"animal";
-
-const BASE=[
-["Central Perk Hearts","Love"],["Smelly Cat Serenade","Chaos"],["Blue French Horn","Love"],
-["Mischief Managed Kiss","Dream"],["Sparkling Twilight Glow","Dream"],
-["Severance Memory Split","Memory"],["Midnight Weeknd Mood","Dream"],
-["Kanye Heart Bear","Chaos"],["Modern Family Chaos Love","Love"],
-["Yellow Umbrella Promise","Dream"],["Always Patronus","Memory"],
-["Forks Moonlight","Memory"],["Macrodata Feelings","Chaos"],
-["Graduation Bear Hug","Dream"],["Dunphy Love Logic","Memory"],
-["Phoebe Soul Energy","Chaos"],["Potion Class Crush","Dream"],
-["Volturi Glance","Chaos"],["Outie/Innie Connection","Memory"],
-["Blinding Lights Bloom","Dream"]
-];
-
-const CARD_POOL=[...Array(76)].map((_,i)=>{
- const b=BASE[i%BASE.length];
- return{
-  name:b[0]+" "+(Math.floor(i/BASE.length)+1),
-  arcana:b[1],
-  charm:58+(i*3)%40,
-  power:55+(i*5)%40,
-  quote:["I'll be there for you.","Always.","Mischief managed.","Blinding lights."][i%4],
-  flavor:["Cozy energy","Romantic chaos","Magic destiny","Neon dream"][i%4]
- };
-});
 
 let deck=JSON.parse(localStorage.getItem("deckData")||"[]");
 let highScore=Number(localStorage.getItem("highScore")||0);
 
-function saveDeck(){localStorage.setItem("deckData",JSON.stringify(deck));}
+let floats=[],paused=true,combo=0,itemChain=0,typeChain=0,lastItem=null,lastType=null;
 
-function unlockCard(){
- const c=CARD_POOL[Math.floor(Math.random()*CARD_POOL.length)];
- if(deck.find(d=>d.name===c.name)) return;
- deck.push(c); saveDeck();
- cardReveal.innerHTML=`✨ <b>${c.name}</b><br><i>${c.quote}</i>`;
- cardReveal.classList.remove("show");
- void cardReveal.offsetWidth;
- cardReveal.classList.add("show");
- setTimeout(()=>cardReveal.classList.remove("show"),2600);
+/* Light Rhythm Bias */
+function applyRhythmBias(f){
+ if(combo<5 || !lastType) return;
+ const currentType=cat(f.type);
+ if(currentType===lastType){
+   f.vx*=0.96;
+   f.vy*=0.96;
+ }else{
+   f.vx*=1.04;
+   f.vy*=1.04;
+ }
 }
 
-/* GAME LOOP */
-let floats=[],paused=true,combo=0,itemChain=0,typeChain=0,lastItem=null,lastType=null;
-function rv(a){const b=(Math.random()-.5)*1.4||.6;return a?b*0.8:b*1.3;}
+function rv(a){
+ const b=(Math.random()-.5)*1.4||.6;
+ return a?b*0.8:b*1.3;
+}
 
 function spawn(){
  const t=ALL[Math.floor(Math.random()*ALL.length)];
  const el=document.createElement("div");
  el.className="float"+(NICK.includes(t)?" nickname":"");
- el.textContent=t; play.appendChild(el);
+ el.textContent=t; 
+ play.appendChild(el);
  const active=cat(t)===lastType;
- const o={el,type:t,x:Math.random()*(play.clientWidth-40),y:Math.random()*(play.clientHeight-40),vx:rv(active),vy:rv(active)};
+ const o={
+   el,
+   type:t,
+   x:Math.random()*(play.clientWidth-40),
+   y:Math.random()*(play.clientHeight-40),
+   vx:rv(active),
+   vy:rv(active)
+ };
+ applyRhythmBias(o);
  el.onclick=()=>!paused&&popFloat(o);
  floats.push(o);
 }
 
 function popFloat(o){
- popSound.currentTime=0; popSound.play().catch(()=>{});
+ popSound.currentTime=0;
+ popSound.play().catch(()=>{});
  const c=cat(o.type);
  itemChain=(o.type===lastItem)?itemChain+1:1;
  typeChain=(c===lastType)?typeChain+1:1;
- lastItem=o.type; lastType=c;
+ lastItem=o.type; 
+ lastType=c;
  combo++;
- if(combo>highScore){highScore=combo;localStorage.setItem("highScore",highScore);}
- showPop(o.x,o.y); remove(o);
- if(itemChain===3) softBurst(o.type);
- if(typeChain===6){typeBurst(c);randomBurst();}
- if(combo%50===0) unlockCard();
+ if(combo>highScore){
+   highScore=combo;
+   localStorage.setItem("highScore",highScore);
+ }
+ showPop(o.x,o.y);
+ remove(o);
+ refill();
  romanticWhisper();
- refill(); updateGlow(); updateStats();
+ updateStats();
 }
 
-function softBurst(t){floats.filter(f=>f.type===t).slice(0,2).forEach(f=>{showPop(f.x,f.y);remove(f);});}
-function typeBurst(c){floats.filter(f=>cat(f.type)===c).forEach(f=>{showPop(f.x,f.y);remove(f);});}
-function randomBurst(){const r=["food","flower","nick","animal"][Math.floor(Math.random()*4)];
-floats.filter(f=>cat(f.type)===r).forEach(f=>{showPop(f.x,f.y);remove(f);});}
-function remove(o){o.el.remove();floats=floats.filter(f=>f!==o);}
-function refill(){while(floats.length<27) spawn();}
+function remove(o){
+ o.el.remove();
+ floats=floats.filter(f=>f!==o);
+}
+
+function refill(){
+ while(floats.length<27) spawn();
+}
 
 function showPop(x,y){
  const d=document.createElement("div");
- d.className="candy"; d.textContent="POP!";
- d.style.left=x+"px"; d.style.top=y+"px";
- play.appendChild(d); setTimeout(()=>d.remove(),600);
-}
-function updateGlow(){
- floats.forEach(f=>{
-  f.el.classList.remove("active","passive");
-  if(cat(f.type)===lastType) f.el.classList.add("active");
-  else f.el.classList.add("passive");
- });
+ d.className="candy";
+ d.textContent="POP!";
+ d.style.left=x+"px";
+ d.style.top=y+"px";
+ play.appendChild(d);
+ setTimeout(()=>d.remove(),600);
 }
 
 function animate(){
  if(!paused){
   floats.forEach(f=>{
-   f.x+=f.vx; f.y+=f.vy;
+   f.x+=f.vx; 
+   f.y+=f.vy;
    if(f.x<0||f.x>play.clientWidth-40)f.vx*=-1;
    if(f.y<0||f.y>play.clientHeight-40)f.vy*=-1;
    f.el.style.transform=`translate(${f.x}px,${f.y}px)`;
@@ -378,19 +374,7 @@ function updateStats(){
  statsEl.textContent=`Highest Score ${highScore}`;
 }
 
-/* DECK */
-function renderDeck(){
- cardGrid.innerHTML="";
- deck.forEach(c=>{
-  const d=document.createElement("div");
-  d.className="card";
-  d.innerHTML=`<div class="stamp">★ COLLECTIBLE</div>
-  <b>${c.name}</b><br>${c.arcana}<br>
-  ❤ ${c.charm} ⚡ ${c.power}<br><i>${c.quote}</i><br>${c.flavor}`;
-  cardGrid.appendChild(d);
- });
-}
-deckBtn.onclick=()=>{deckPanel.style.display="flex";renderDeck();}
+deckBtn.onclick=()=>deckPanel.style.display="flex";
 deckBack.onclick=()=>deckPanel.style.display="none";
 
 yes.onclick=()=>{
@@ -401,7 +385,10 @@ yes.onclick=()=>{
  for(let i=0;i<27;i++) spawn();
  paused=false;
  updateStats();
- setTimeout(()=>{messageEl.style.opacity=0;statsEl.style.opacity=1;},3000);
+ setTimeout(()=>{
+   messageEl.style.opacity=0;
+   statsEl.style.opacity=1;
+ },3000);
 };
 </script>
 
