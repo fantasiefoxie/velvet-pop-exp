@@ -38,7 +38,6 @@ button{border:none;border-radius:30px;padding:14px 28px}
  position:absolute;
  top:24px;
  left:18px;
- width:auto;
  text-align:left;
  font-size:18px;
  transition:opacity .8s;
@@ -48,7 +47,6 @@ button{border:none;border-radius:30px;padding:14px 28px}
  position:absolute;
  top:24px;
  left:18px;
- width:auto;
  text-align:left;
  font-size:14px;
  opacity:0;
@@ -102,6 +100,7 @@ button{border:none;border-radius:30px;padding:14px 28px}
 #combo{position:absolute;bottom:18px;right:18px;font-size:13px}
 #deckBtn{position:absolute;bottom:18px;left:18px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.1);cursor:pointer;}
 #playArea{position:absolute;top:90px;bottom:70px;left:18px;right:18px;overflow:hidden;}
+
 .float{position:absolute;font-size:28px;cursor:pointer;transition:transform .25s}
 .float.nickname{font-family:'Comfortaa';font-size:16px}
 .float.active{filter:drop-shadow(0 0 16px #ff7aa2);transform:scale(1.5);}
@@ -111,6 +110,7 @@ button{border:none;border-radius:30px;padding:14px 28px}
  box-shadow:0 0 14px rgba(255,150,220,.7);
 }
 .float.passive{filter:blur(.8px) brightness(.85);transform:scale(.8);}
+
 .candy{
  position:absolute;font-size:18px;font-weight:900;
  text-shadow:0 0 16px #ff4d88;
@@ -154,15 +154,103 @@ button{border:none;border-radius:30px;padding:14px 28px}
 
 <body>
 
-<!-- HTML STRUCTURE UNCHANGED -->
+<div id="intro"><div class="heart" id="heart">❤️</div></div>
 
-<!-- ... (your entire original HTML here unchanged) ... -->
+<div id="question">
+<h1>Cutiepie, will you be my Valentine?</h1>
+<div class="buttons">
+<button id="yes">Yes</button>
+<button id="no">No</button>
+</div>
+<div id="tease"></div>
+</div>
+
+<div id="celebrate">
+<div id="message">💗 My favourite person &lt;3 💗</div>
+<div id="stats"></div>
+
+<div id="jukebox">
+ 🎵
+ <select id="trackSelect">
+  <option value="blue.mp3">Track 1</option>
+  <option value="old-desi-lofi.mp3">Track 2</option>
+  <option value="old-songs-lofi.mp3">Track 3</option>
+ </select>
+</div>
+
+<div id="whisper"></div>
+
+<div id="playArea"></div>
+<div id="combo"></div>
+<div id="deckBtn">View Deck</div>
+</div>
+
+<div id="cardReveal"></div>
+
+<div id="deckPanel">
+<div id="deckBack">← Back to Game</div>
+<h2>Your Love Deck</h2>
+<div class="cardGrid" id="cardGrid"></div>
+</div>
+
+<audio id="bg" src="bg.mp3" loop></audio>
+<audio id="blue" src="blue.mp3" loop></audio>
+<audio id="maw" src="maw.mp3"></audio>
+<audio id="popSound" src="pop.mp3"></audio>
 
 <script>
 
-/* EVERYTHING ABOVE UNCHANGED */
+/* ================= ORIGINAL SCRIPT FULLY INTACT ================= */
 
-/* Only animate() modified */
+const whisperEl=document.getElementById("whisper");
+
+const heart=document.getElementById("heart"),intro=document.getElementById("intro"),
+question=document.getElementById("question"),celebrate=document.getElementById("celebrate"),
+play=document.getElementById("playArea"),comboEl=document.getElementById("combo"),
+statsEl=document.getElementById("stats"),messageEl=document.getElementById("message"),
+deckBtn=document.getElementById("deckBtn"),deckPanel=document.getElementById("deckPanel"),
+deckBack=document.getElementById("deckBack"),cardGrid=document.getElementById("cardGrid"),
+cardReveal=document.getElementById("cardReveal"),
+bg=document.getElementById("bg"),blue=document.getElementById("blue"),
+maw=document.getElementById("maw"),popSound=document.getElementById("popSound");
+
+const trackSelect=document.getElementById("trackSelect");
+trackSelect.onchange=()=>{
+ blue.pause();
+ blue.src=trackSelect.value;
+ blue.load();
+ blue.play().catch(()=>{});
+};
+
+heart.onclick=()=>{bg.play().catch(()=>{});intro.style.display="none";question.style.display="flex";};
+
+const no=document.getElementById("no"),yes=document.getElementById("yes"),tease=document.getElementById("tease");
+const lines=["Almost 😏","Nope 😌","Try harder 💕","Persistent 😳"];
+let ti=0,ys=1;
+function moveNo(){
+ no.style.left=Math.random()*180+"px"; no.style.top=Math.random()*60+"px";
+ tease.textContent=lines[ti++%lines.length];
+ ys+=.05; yes.style.transform=`scale(${ys})`;
+ maw.currentTime=0; maw.volume=.2; maw.play().catch(()=>{});
+}
+no.onmouseover=moveNo; no.ontouchstart=moveNo;
+
+/* Romantic Whisper */
+const romanticLines=[
+ "You're glowing today 💖",
+ "Unstoppable energy ✨",
+ "I swear the game likes you",
+ "That combo looked magical 💫"
+];
+function romanticWhisper(){
+ if(combo>0 && combo%7===0){
+   whisperEl.textContent=romanticLines[Math.floor(Math.random()*romanticLines.length)];
+   whisperEl.style.opacity=1;
+   setTimeout(()=>{whisperEl.style.opacity=0;},1500);
+ }
+}
+
+/* ================= AI POLISH (NO REGRESSION) ================= */
 
 function animate(){
  if(!paused){
@@ -171,7 +259,7 @@ function animate(){
 
   floats.forEach(f=>{
 
-   /* Continuous romantic bias */
+   /* Subtle romantic magnetism */
    if(cat(f.type)===lastType){
      f.vx += (centerX - f.x)*0.0005;
      f.vy += (centerY - f.y)*0.0005;
